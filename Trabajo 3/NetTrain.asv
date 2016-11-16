@@ -8,31 +8,38 @@
 %   irisTargets - target data.
 clear all;close all;clc
 %load('redNeuronal.mat');
-C=15;
+C=5;
 x = [];
-for i=1:10
-    nombre = ['0000' num2str(i) '.png']; % Creamos el nombre de la imagen
-    img = imread(fullfile('C:\Users\lis\Desktop\PDI\Train',nombre)); % leemos la imagen y la pasamos a double
-    img = double(img(:,:,1));
+for i=0:9
+    nombre = ['00000'  '.ppm']; % Creamos el nombre de la imagen
+    img = imread(fullfile(['.\Train\0' num2str(i)],nombre)); % leemos la imagen y la pasamos a double
+    img = double(rgb2gray(img));
     %disp(img);
     [Y, lambda, A, Xs] = pca(img,'NumComponents', C);%'Rows', 'all'); %Realiza un analisis PCA de img y retorna Xs con C caracteristicas(descritor)
-    x = horzcat(x, Xs(:)); %Concatenamos el vector de caracteriscas de cada imagen
+%     [fil, col] = size(Y);
+%     fC = [];
+%     for j=1:col
+%         c = Y(:,j); c = max(c);
+%         fC = [fC, c];
+%     end
+    x = horzcat(x, Y(:)); %Concatenamos el vector de caracteriscas de cada imagen
 end
 %x = irisInputs;
 t = xlsread('target.xlsx'); %Target de cada imagen
 
 % Create a Pattern Recognition Network
 % hiddenLayerSize = 10;
-net = patternnet([90, 75], 'trainscg'); %Creamos el tipos de red
+net = patternnet(10); %Creamos el tipos de red
 
 % Setup Division of Data for Training, Validation, Testing
-% net.divideParam.trainRatio = 70/100;
-% net.divideParam.valRatio = 15/100;
-% net.divideParam.testRatio = 15/100;
+net.divideParam.trainRatio = 70/100;
+net.divideParam.valRatio = 15/100;
+net.divideParam.testRatio = 15/100;
 
 
 % Train the Network
 [net,tr] = train(net,x,t); %Entramos y obtenemos la red
+
 save('redNeuronal.mat'); %Guardamos la variables del workspace
 
 nntraintool;
