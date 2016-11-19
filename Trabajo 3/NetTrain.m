@@ -13,16 +13,22 @@ x = [];
 for i=0:9
     nombre = ['00000'  '.ppm']; % Creamos el nombre de la imagen
     img = imread(fullfile(['.\Train\0' num2str(i)],nombre)); % leemos la imagen y la pasamos a double
-    img = double(rgb2gray(img));
+    img = imresize(img, [50 50]);
+%     img = double(rgb2gray(img));
     %disp(img);
-    [Y, lambda, A, Xs] = pca(img,'NumComponents', C);%'Rows', 'all'); %Realiza un analisis PCA de img y retorna Xs con C caracteristicas(descritor)
-%     [fil, col] = size(Y);
-%     fC = [];
-%     for j=1:col
-%         c = Y(:,j); c = max(c);
-%         fC = [fC, c];
-%     end
-    x = horzcat(x, Y(:)); %Concatenamos el vector de caracteriscas de cada imagen
+%     [Y, lambda, A, Xs] = pca(img,'NumComponents', C);%'Rows', 'all'); %Realiza un analisis PCA de img y retorna Xs con C caracteristicas(descritor)
+    [fil, col, cap] = size(img);
+    fC = [];
+    roja=0; verde=0; azul=0;
+    for f=1:fil
+        for c=1:col
+            roja = roja + img(f,c,1);
+            verde = verde + img(f,c,2);
+            azul = azul + img(f,c,3);
+        end
+    end
+    comp = [roja, verde, azul]/(fil*col);
+    x = horzcat(x, comp'); %Concatenamos el vector de caracteriscas de cada imagen
 end
 %x = irisInputs;
 t = xlsread('target.xlsx'); %Target de cada imagen
