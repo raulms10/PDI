@@ -10,32 +10,72 @@ clear all;close all;clc
 %load('redNeuronal.mat');
 C=5;
 x = [];
+tA = [];
+tB = [];
 for i=0:9
     nombre = ['00000'  '.ppm']; % Creamos el nombre de la imagen
-    img = imread(fullfile(['.\Train\0' num2str(i)],nombre)); % leemos la imagen y la pasamos a double
-    img = imresize(img, [50 50]);
+    img1 = imread(fullfile(['.\Train\0' num2str(i)],nombre)); % leemos la imagen y la pasamos a double
+    img1 = imresize(img1, [100 100]);
+    a1 = img1;
+   
+    
+    nombre = ['00001'  '.ppm']; % Creamos el nombre de la imagen
+    img2 = imread(fullfile(['.\Train\0' num2str(i)],nombre)); % leemos la imagen y la pasamos a double
+    img2 = imresize(img2, [100 100]);
+    a2 = img2;
+    
+    [b,c,l,h] = componentes_color(a1);
+    img3=rgb2hsv(a1);
+    img4=rgb2hsv(a2);
+    tA = [tA, b];
+    [b,c,l,h] = componentes_color(a2);
+    tB = [tB, b];
 %     img = double(rgb2gray(img));
     %disp(img);
 %     [Y, lambda, A, Xs] = pca(img,'NumComponents', C);%'Rows', 'all'); %Realiza un analisis PCA de img y retorna Xs con C caracteristicas(descritor)
-    [fil, col, cap] = size(img);
+    [fil, col, cap] = size(img1);
     fC = [];
-    roja=0; verde=0; azul=0;
+    roja1=0; verde1=0; azul1=0;
+    roja2=0; verde2=0; azul2=0;
+    h1=0;s1=0; v1=0;
+    h2=0;s2=0; v2=0;
     for f=1:fil
         for c=1:col
-            roja = roja + img(f,c,1);
-            verde = verde + img(f,c,2);
-            azul = azul + img(f,c,3);
+            h1 = h1 + double(img3(f,c,1));
+            s1 = s1 + double(img3(f,c,2));
+            v1 = v1 + double(img3(f,c,3));
+            h2 = h2 + double(img4(f,c,1));
+            s2 = s2 + double(img4(f,c,2));
+            v2 = v2 + double(img4(f,c,3));
+            roja1 = roja1 + double(img1(f,c,1));
+            verde1 = verde1 + double(img1(f,c,2));
+            azul1 = azul1 + double(img1(f,c,3));
+            roja2 = roja2 + double(img2(f,c,1));
+            verde2 = verde2 + double(img2(f,c,2));
+            azul2 = azul2 + double(img2(f,c,3));
         end
     end
-    comp = [roja, verde, azul]/(fil*col);
-    x = horzcat(x, comp'); %Concatenamos el vector de caracteriscas de cada imagen
+    comp1 = [roja1, verde1, azul1]/(fil*col);
+    comp2 = [roja2, verde2, azul2]/(fil*col);
+    comp3 = [h1, s1, v1]/(fil*col*255);
+    comp4 = [h2, s2, v2]/(fil*col*255);
+    comp1 = [comp1, comp3];
+    comp2 = [comp2, comp4];
+    x = horzcat(x, comp1'); %Concatenamos el vector de caracteriscas de cada imagen
+    x = horzcat(x, comp2');
+    
 end
+tT = [tA;tB];
+figure(1); imshow(tA); impixelinfo;
+figure(2); imshow(tB); impixelinfo;
+figure(3); imshow(tT); impixelinfo;
+
 %x = irisInputs;
 t = xlsread('target.xlsx'); %Target de cada imagen
 
 % Create a Pattern Recognition Network
 % hiddenLayerSize = 10;
-net = patternnet(10); %Creamos el tipos de red
+net = patternnet(10); %Creamos el tipo de red
 
 % Setup Division of Data for Training, Validation, Testing
 net.divideParam.trainRatio = 70/100;
@@ -46,14 +86,22 @@ net.divideParam.testRatio = 15/100;
 % Train the Network
 [net,tr] = train(net,x,t); %Entramos y obtenemos la red
 
+v = x(:, 1);
+disp(net);
+disp('dfsd');
+r = sim(net,v)
 save('redNeuronal.mat'); %Guardamos la variables del workspace
 
+%p = x(:,1); %Sacamos un valor del vector de caracteristicas
+%y = net(p) %Probamos la red
+
+
 nntraintool;
-plotperform(tr);
-testX = x(:, tr.testInd);
-testT = t(:, tr.testInd);
-testY = net(testX);
-testYindices = vec2ind(testY);
-testTindices = vec2ind(testT);
-[c, cm] = confusion(testT, testY);
-plotconfusion(testT, testY);
+% plotperform(tr);
+% testX = x(:, tr.testInd);
+% testT = t(:, tr.testInd);
+% testY = net(testX);
+% testYindices = vec2ind(testY);
+% testTindices = vec2ind(testT);
+% [c, cm] = confusion(testT, testY);
+% plotconfusion(testT, testY);
